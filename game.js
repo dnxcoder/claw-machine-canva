@@ -38,6 +38,7 @@ function resetGame() {
   dropBtn.disabled = true;
   // ensure the win modal is hidden when restarting
   modal.classList.add('hidden');
+  modal.style.display = 'none';
   prizeImg.src = '';
   prizeImg.style.backgroundColor = '';
 }
@@ -200,6 +201,7 @@ function update() {
         prizeImg.src = claw.grabbed.sprite;
         prizeImg.style.backgroundColor = '';
         modal.classList.remove('hidden');
+        modal.style.display = 'flex';
       }
     }
   }
@@ -239,5 +241,6 @@ dropBtn.addEventListener('click', () => {
 
 closeModal.addEventListener('click', () => {
   modal.classList.add('hidden');
+  modal.style.display = 'none';
   resetGame();
 });
