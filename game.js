@@ -12,6 +12,45 @@ let gameState = 'waiting'; // waiting, playing
 let claw = { x: canvas.width/2, y: 50, width: 40, height: 20, state:'idle', grabbed:null };
 let toys = [];
 
+// create simple pixel-art sprites for the claw in open and closed states
+function createClawSprites() {
+  function draw(open = true) {
+    const c = document.createElement('canvas');
+    c.width = 40;
+    c.height = 40;
+    const cx = c.getContext('2d');
+    cx.strokeStyle = '#fff';
+    cx.lineWidth = 4;
+    cx.lineCap = 'round';
+    if (open) {
+      // arms open in a V shape
+      cx.beginPath();
+      cx.moveTo(20, 0);
+      cx.lineTo(5, 25);
+      cx.moveTo(20, 0);
+      cx.lineTo(35, 25);
+      cx.stroke();
+    } else {
+      // arms closed almost parallel
+      cx.beginPath();
+      cx.moveTo(18, 0);
+      cx.lineTo(14, 25);
+      cx.moveTo(22, 0);
+      cx.lineTo(26, 25);
+      cx.stroke();
+    }
+    return c.toDataURL();
+  }
+
+  const openImg = new Image();
+  openImg.src = draw(true);
+  const closedImg = new Image();
+  closedImg.src = draw(false);
+  return { open: openImg, closed: closedImg };
+}
+
+const clawSprites = createClawSprites();
+
 function randomColor() {
   return '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6,'0');
 }
@@ -156,9 +195,9 @@ function drawMachine() {
 
   // claw
   ctx.fillStyle = '#ccc';
-  ctx.fillRect(claw.x - claw.width/2, 20, 4, claw.y-20); // arm
-  ctx.fillStyle = '#fff';
-  ctx.fillRect(claw.x - claw.width/2, claw.y, claw.width, claw.height);
+  ctx.fillRect(claw.x - 2, 20, 4, claw.y - 20); // arm
+  const sprite = (claw.grabbed) ? clawSprites.closed : clawSprites.open;
+  ctx.drawImage(sprite, claw.x - sprite.width / 2, claw.y);
 }
 
 function update() {
