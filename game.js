@@ -19,11 +19,13 @@ function randomColor() {
 function initToys() {
   toys = [];
   for (let i=0; i<5; i++) {
+    const color = randomColor();
     toys.push({
       x: 60 + i*80,
       y: canvas.height-60,
-      size: 30,
-      color: randomColor(),
+      size: 40,
+      color,
+      sprite: generateToySprite(color),
       grabbed: false
     });
   }
@@ -34,6 +36,10 @@ function resetGame() {
   claw = { x: canvas.width/2, y: 50, width:40, height:20, state:'idle', grabbed:null };
   initToys();
   dropBtn.disabled = true;
+  // ensure the win modal is hidden when restarting
+  modal.classList.add('hidden');
+  prizeImg.src = '';
+  prizeImg.style.backgroundColor = '';
 }
 
 resetGame();
@@ -75,6 +81,61 @@ function updateJoy(e) {
   joy.knobX = Math.max(-joy.r, Math.min(joy.r, x - joy.cx));
 }
 
+// draw a simple teddy bear-like toy
+function drawToy(toy, context = ctx) {
+  const { x, y, size, color } = toy;
+  const c = context;
+  c.fillStyle = color;
+
+  // body
+  c.beginPath();
+  c.arc(x, y, size / 2, 0, Math.PI * 2);
+  c.fill();
+
+  // head
+  c.beginPath();
+  c.arc(x, y - size * 0.7, size / 2.5, 0, Math.PI * 2);
+  c.fill();
+
+  // ears
+  c.beginPath();
+  c.arc(x - size / 3, y - size * 0.95, size / 6, 0, Math.PI * 2);
+  c.arc(x + size / 3, y - size * 0.95, size / 6, 0, Math.PI * 2);
+  c.fill();
+
+  // arms
+  c.beginPath();
+  c.arc(x - size / 1.8, y, size / 5, 0, Math.PI * 2);
+  c.arc(x + size / 1.8, y, size / 5, 0, Math.PI * 2);
+  c.fill();
+
+  // legs
+  c.beginPath();
+  c.arc(x - size / 3, y + size / 1.2, size / 4, 0, Math.PI * 2);
+  c.arc(x + size / 3, y + size / 1.2, size / 4, 0, Math.PI * 2);
+  c.fill();
+
+  // face
+  c.fillStyle = '#000';
+  c.beginPath();
+  c.arc(x - size / 8, y - size * 0.75, size / 15, 0, Math.PI * 2); // left eye
+  c.arc(x + size / 8, y - size * 0.75, size / 15, 0, Math.PI * 2); // right eye
+  c.fill();
+
+  c.beginPath();
+  c.arc(x, y - size * 0.65, size / 15, 0, Math.PI * 2); // nose
+  c.fill();
+}
+
+function generateToySprite(color) {
+  const c = document.createElement('canvas');
+  c.width = 64;
+  c.height = 64;
+  const cx = c.getContext('2d');
+  drawToy({ x: 32, y: 32, size: 32, color }, cx);
+  return c.toDataURL();
+}
+
 function drawMachine() {
   ctx.clearRect(0,0,canvas.width,canvas.height);
   // machine outline
@@ -87,9 +148,8 @@ function drawMachine() {
 
   // toys
   for (const toy of toys) {
-    if(!toy.grabbed) {
-      ctx.fillStyle = toy.color;
-      ctx.fillRect(toy.x- toy.size/2, toy.y- toy.size/2, toy.size, toy.size);
+    if(!toy.grabbed || toy === claw.grabbed) {
+      drawToy(toy);
     }
   }
 
@@ -137,7 +197,8 @@ function update() {
       claw.grabbed.y += 5;
       if(claw.grabbed.y > 560) {
         gameState = 'won';
-        prizeImg.style.background = claw.grabbed.color;
+        prizeImg.src = claw.grabbed.sprite;
+        prizeImg.style.backgroundColor = '';
         modal.classList.remove('hidden');
       }
     }
